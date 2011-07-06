@@ -13,15 +13,15 @@ class TestDeepCloneable < Test::Unit::TestCase
   end
 
   def test_single_clone_exception
-    clone = @jack.clone(:except => :name)
+    clone = @jack.dup(:except => :name)
     assert clone.save
-    assert_equal @jack.name, @jack.clone.name # Old behaviour
+    assert_equal @jack.name, @jack.dup.name # Old behaviour
     assert_nil clone.name
     assert_equal @jack.nick_name, clone.nick_name
   end
 
   def test_multiple_clone_exception
-    clone = @jack.clone(:except => [:name, :nick_name])
+    clone = @jack.dup(:except => [:name, :nick_name])
     assert clone.save
     assert_nil clone.name
     assert_equal 'no nickname', clone.nick_name
@@ -29,40 +29,40 @@ class TestDeepCloneable < Test::Unit::TestCase
   end
 
   def test_single_include_association
-    clone = @jack.clone(:include => :mateys)
+    clone = @jack.dup(:include => :mateys)
     assert clone.save
     assert_equal 1, clone.mateys.size
   end
 
   def test_single_include_belongs_to_polymorphic_association
-    clone = @jack.clone(:include => :ship)
+    clone = @jack.dup(:include => :ship)
     assert clone.save
     assert_not_nil clone.ship
     assert_not_equal @jack.ship, clone.ship
   end
 
   def test_single_include_has_many_polymorphic_association
-    clone = @ship.clone(:include => :pirates)
+    clone = @ship.dup(:include => :pirates)
     assert clone.save
     assert clone.pirates.any?
   end
 
   def test_multiple_include_association
-    clone = @jack.clone(:include => [:mateys, :treasures])
+    clone = @jack.dup(:include => [:mateys, :treasures])
     assert clone.save
     assert_equal 1, clone.mateys.size
     assert_equal 1, clone.treasures.size
   end
 
   def test_deep_include_association
-    clone = @jack.clone(:include => {:treasures => :gold_pieces})
+    clone = @jack.dup(:include => {:treasures => :gold_pieces})
     assert clone.save
     assert_equal 1, clone.treasures.size
     assert_equal 1, clone.gold_pieces.size
   end
 
   def test_include_association_assignments
-    clone = @jack.clone(:include => :treasures)
+    clone = @jack.dup(:include => :treasures)
 
     clone.treasures.each do |treasure|
       assert_equal clone, treasure.pirate
@@ -70,7 +70,7 @@ class TestDeepCloneable < Test::Unit::TestCase
   end
 
   def test_multiple_and_deep_include_association
-    clone = @jack.clone(:include => {:treasures => :gold_pieces, :mateys => {}})
+    clone = @jack.dup(:include => {:treasures => :gold_pieces, :mateys => {}})
     assert clone.save
     assert_equal 1, clone.treasures.size
     assert_equal 1, clone.gold_pieces.size
@@ -78,7 +78,7 @@ class TestDeepCloneable < Test::Unit::TestCase
   end
 
   def test_multiple_and_deep_include_association_with_array
-    clone = @jack.clone(:include => [{:treasures => :gold_pieces}, :mateys])
+    clone = @jack.dup(:include => [{:treasures => :gold_pieces}, :mateys])
     assert clone.save
     assert_equal 1, clone.treasures.size
     assert_equal 1, clone.gold_pieces.size
@@ -86,13 +86,13 @@ class TestDeepCloneable < Test::Unit::TestCase
   end
 
   def test_with_belongs_to_relation
-    clone = @jack.clone(:include => :parrot)
+    clone = @jack.dup(:include => :parrot)
     assert clone.save
     assert_not_equal clone.parrot, @jack.parrot
   end
 
   def test_should_pass_nested_exceptions
-    clone = @jack.clone(:include => :parrot, :except => [:name, { :parrot => [:name] }])
+    clone = @jack.dup(:include => :parrot, :except => [:name, { :parrot => [:name] }])
     assert clone.save
     assert_not_equal clone.parrot, @jack.parrot
     assert_not_nil @jack.parrot.name
@@ -101,7 +101,7 @@ class TestDeepCloneable < Test::Unit::TestCase
 
   def test_should_not_double_clone_when_using_dictionary
     current_matey_count = Matey.count
-    clone = @jack.clone(:include => [:mateys, { :treasures => :matey }], :use_dictionary => true)
+    clone = @jack.dup(:include => [:mateys, { :treasures => :matey }], :use_dictionary => true)
     clone.save!
 
     assert_equal current_matey_count + 1, Matey.count
@@ -111,9 +111,9 @@ class TestDeepCloneable < Test::Unit::TestCase
     current_matey_count = Matey.count
 
     dict = { :mateys => {} }
-    @jack.mateys.each{|m| dict[:mateys][m] = m.clone }
+    @jack.mateys.each{|m| dict[:mateys][m] = m.dup }
 
-    clone = @jack.clone(:include => [:mateys, { :treasures => :matey }], :dictionary => dict)
+    clone = @jack.dup(:include => [:mateys, { :treasures => :matey }], :dictionary => dict)
     clone.save!
 
     assert_equal current_matey_count + 1, Matey.count
@@ -123,14 +123,14 @@ class TestDeepCloneable < Test::Unit::TestCase
     @human = Animal::Human.create :name => "Michael"
     @pig = Animal::Pig.create :human => @human, :name => 'big pig'
 
-    clone_human = @human.clone :include => [:pigs]
+    clone_human = @human.dup :include => [:pigs]
     assert clone_human.save
     assert_equal 1, clone_human.pigs.count
     
     @human2 = Animal::Human.create :name => "John"
     @pig2 = @human2.pigs.create :name => 'small pig'
     
-    clone_human_2 = @human.clone :include => [:pigs]
+    clone_human_2 = @human.dup :include => [:pigs]
     assert clone_human_2.save
     assert_equal 1, clone_human_2.pigs.count
   end 
@@ -143,7 +143,7 @@ class TestDeepCloneable < Test::Unit::TestCase
     @human.chickens << [@chicken1, @chicken2]
     @human2.chickens << [@chicken1, @chicken2]    
     
-    clone_human = @human.clone :include => :ownerships
+    clone_human = @human.dup :include => :ownerships
     assert clone_human.save
     assert_equal 2, clone_human.chickens.count    
   end 
